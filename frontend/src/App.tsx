@@ -514,7 +514,7 @@ const CATEGORY_AXIS_WIDTH = 136;
 
 function CategoryTick({ x, y, payload }: { x?: number; y?: number; payload?: { value?: string } }): JSX.Element {
   return (
-    <text x={x} y={y} textAnchor="end" dominantBaseline="central" fontSize={12} fill="#142033">
+    <text x={(x ?? 0) - CATEGORY_AXIS_WIDTH + 8} y={y} textAnchor="start" dominantBaseline="central" fontSize={12} fill="#142033">
       {categoryLabel(String(payload?.value ?? ""))}
     </text>
   );
