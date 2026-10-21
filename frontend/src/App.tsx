@@ -290,10 +290,10 @@ export function App(): JSX.Element {
               ) : (
                 <div ref={chartBox} className="chart wide-chart" style={{ height: 28 + points.length * 30 }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={categoryBars(points, pickedCategory)} margin={{ top: 4, right: chartWidth < 560 ? 112 : 148, left: 4, bottom: 0 }}>
+                    <BarChart layout="vertical" data={categoryBars(points, pickedCategory)} margin={{ top: 4, right: chartWidth < 560 ? 112 : 148, left: 8, bottom: 0 }}>
                       <CartesianGrid stroke="#eef1f4" horizontal={false} />
                       <XAxis type="number" tickFormatter={inrCompactText} tickLine={false} axisLine={false} />
-                      <YAxis type="category" dataKey="category" width={chartWidth < 560 ? 92 : 112} tickLine={false} axisLine={false} tick={<CategoryTick />} />
+                      <YAxis type="category" dataKey="category" width={CATEGORY_AXIS_WIDTH} tickLine={false} axisLine={false} interval={0} tick={<CategoryTick />} />
                       <Tooltip cursor={false} content={ChartTip} wrapperStyle={{ outline: "none", zIndex: 5 }} />
                       <Bar dataKey="total" barSize={16} radius={[0, 6, 6, 0]} onClick={(point) => void pickCategory(String(point.category ?? ""))}>
                         {categoryBars(points, pickedCategory).map((bar) => (
@@ -510,9 +510,11 @@ function categoryBars(
   }));
 }
 
+const CATEGORY_AXIS_WIDTH = 136;
+
 function CategoryTick({ x, y, payload }: { x?: number; y?: number; payload?: { value?: string } }): JSX.Element {
   return (
-    <text x={(x ?? 0) - 116} y={y} textAnchor="start" dominantBaseline="central" fontSize={10} fill="#142033">
+    <text x={x} y={y} textAnchor="end" dominantBaseline="central" fontSize={12} fill="#142033">
       {categoryLabel(String(payload?.value ?? ""))}
     </text>
   );
