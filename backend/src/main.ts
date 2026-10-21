@@ -23,9 +23,20 @@ async function bootstrap(): Promise<void> {
   await seedIfEmpty();
   await refreshClassification();
   const app = await NestFactory.create(AppModule);
-  app.enableCors({ origin: ["http://localhost:5173", "http://127.0.0.1:5173"] });
+  app.enableCors({ origin: allowedOrigins() });
   const port = Number(process.env.PORT ?? 3000);
-  await app.listen(port);
+  await app.listen(port, "0.0.0.0");
+}
+
+function allowedOrigins(): string[] {
+  const origins = ["http://localhost:5173", "http://127.0.0.1:5173"];
+  const web = process.env.WEB_URL?.replace(/\/$/, "");
+  if (web) origins.push(web);
+  for (const extra of (process.env.CORS_ORIGINS ?? "").split(",")) {
+    const trimmed = extra.trim().replace(/\/$/, "");
+    if (trimmed) origins.push(trimmed);
+  }
+  return origins;
 }
 
 async function waitForDatabase(): Promise<void> {

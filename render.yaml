@@ -1,0 +1,36 @@
+# Shared-dev API, same shape as careFlow.
+# Create a Render Postgres database, then set the secret env vars in the dashboard.
+# Use that database's external connection string for all three DATABASE_URL values.
+# Do not commit GEMINI_API_KEY.
+
+services:
+  - type: web
+    name: bank-statements-api
+    runtime: node
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash
+      - key: SEED_CSV
+        value: ../db/seed/transactions.csv
+      - key: WEB_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_MIGRATE
+        sync: false
+      - key: DATABASE_URL_ADMIN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

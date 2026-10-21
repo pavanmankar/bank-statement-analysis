@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { newPgPool } from "../db.js";
 
 const VIEW_SQL = `
 CREATE OR REPLACE VIEW v_transactions AS
@@ -52,10 +52,56 @@ SELECT
 FROM transactions
 LEFT JOIN merchant_labels ml ON ml.merchant = transactions.merchant`;
 
+const BASE_TABLES_SQL = `
+CREATE TABLE IF NOT EXISTS transactions (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  txn_date date NOT NULL,
+  value_date date NOT NULL,
+  description text NOT NULL,
+  ref_no text,
+  debit numeric(14, 2),
+  credit numeric(14, 2),
+  balance numeric(14, 2) NOT NULL,
+  channel text NOT NULL,
+  merchant text NOT NULL,
+  category text NOT NULL,
+  is_refund boolean NOT NULL DEFAULT false,
+  is_self_transfer boolean NOT NULL DEFAULT false,
+  source text,
+  row_hash text NOT NULL UNIQUE,
+  CONSTRAINT transactions_one_amount CHECK (
+    (debit IS NOT NULL AND credit IS NULL)
+    OR (debit IS NULL AND credit IS NOT NULL)
+  )
+);
+
+CREATE INDEX IF NOT EXISTS transactions_txn_date_idx ON transactions (txn_date);
+CREATE INDEX IF NOT EXISTS transactions_category_idx ON transactions (category);
+CREATE INDEX IF NOT EXISTS transactions_merchant_idx ON transactions (merchant);
+
+CREATE TABLE IF NOT EXISTS chat_sessions (
+  id uuid PRIMARY KEY,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  session_id uuid NOT NULL REFERENCES chat_sessions (id) ON DELETE CASCADE,
+  role text NOT NULL CHECK (role IN ('user', 'assistant')),
+  content text NOT NULL,
+  sql_text text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS chat_messages_session_idx ON chat_messages (session_id, created_at);
+`;
+
 export async function ensureSchema(): Promise<void> {
   await dropMerchantPlaces();
-  const admin = new Pool({ connectionString: adminUrl(), max: 1 });
+  const admin = newPgPool(adminUrl(), 1);
   try {
+    await admin.query(BASE_TABLES_SQL);
     await admin.query(`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS source text`);
     await admin.query(
       `CREATE TABLE IF NOT EXISTS merchant_labels (
@@ -89,15 +135,30 @@ export async function ensureSchema(): Promise<void> {
     await admin.query(
       `COMMENT ON COLUMN v_transactions.is_loan_credit IS 'Loan or disbursement credit. Borrowing, not a receipt and not income.'`,
     );
-    await admin.query(`GRANT SELECT ON transactions, v_transactions, merchant_labels TO chat_ro`);
-    await admin.query(`GRANT SELECT, INSERT, UPDATE, DELETE ON transactions, merchant_labels, statement_lock TO chat_rw`);
+    await grantIfRole(
+      admin,
+      "chat_ro",
+      `GRANT SELECT ON transactions, v_transactions, merchant_labels TO chat_ro`,
+    );
+    await grantIfRole(
+      admin,
+      "chat_rw",
+      `GRANT SELECT, INSERT, UPDATE, DELETE ON transactions, chat_sessions, chat_messages, merchant_labels, statement_lock TO chat_rw`,
+    );
+    await grantIfRole(admin, "chat_rw", `GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO chat_rw`);
   } finally {
     await admin.end();
   }
 }
 
+async function grantIfRole(admin: ReturnType<typeof newPgPool>, role: string, sql: string): Promise<void> {
+  const found = await admin.query(`SELECT 1 FROM pg_roles WHERE rolname = $1`, [role]);
+  if (!found.rowCount) return;
+  await admin.query(sql);
+}
+
 async function dropMerchantPlaces(): Promise<void> {
-  const admin = new Pool({ connectionString: adminUrl(), max: 1 });
+  const admin = newPgPool(adminUrl(), 1);
   try {
     await admin.query(`DROP TABLE IF EXISTS merchant_places`);
   } finally {
@@ -108,5 +169,6 @@ async function dropMerchantPlaces(): Promise<void> {
 function adminUrl(): string {
   if (process.env.DATABASE_URL_ADMIN) return process.env.DATABASE_URL_ADMIN;
   const migrate = process.env.DATABASE_URL_MIGRATE ?? "";
-  return migrate.replace(/\/\/[^@]+@/, "//postgres:postgres@");
+  if (/\/\/chat_rw:/i.test(migrate)) return migrate.replace(/\/\/[^@]+@/, "//postgres:postgres@");
+  return migrate;
 }

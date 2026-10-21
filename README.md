@@ -81,6 +81,17 @@ If Docker is not installed, start a local Postgres from `backend` with `npm run 
 
 The API is on port 3000. The UI proxies `/api` to it.
 
+## Deploy
+
+The shared cloud matches [careFlow](https://github.com/pavanmankar/careFlow): the UI is on Vercel, the API is a free Render web service, and the browser calls `/api` on the Vercel host. Vercel rewrites that path to Render. Local and cloud databases stay separate.
+
+1. Create a Postgres database and copy its external connection string.
+2. On Render, create a Blueprint from this repo (`render.yaml`, branch `main`). Set `DATABASE_URL`, `DATABASE_URL_MIGRATE`, and `DATABASE_URL_ADMIN` to that connection string. Set `GEMINI_API_KEY` if chat should answer. The service URL should be `https://bank-statements-api.onrender.com`.
+3. On Vercel, import this repo, set the root directory to `frontend`, and use the Vite preset. `frontend/vercel.json` rewrites `/api` and `/health` to that Render URL. If Render assigns a different host, change the destination in `frontend/vercel.json` and push.
+4. Set Render `WEB_URL` to the Vercel origin, with no trailing slash, then redeploy the API.
+
+Open the Vercel URL. The first request can take about a minute while the free Render service wakes. Charts and upload work without a model key. Chat answers need `GEMINI_API_KEY`.
+
 To regenerate the synthetic file:
 
 ```bash

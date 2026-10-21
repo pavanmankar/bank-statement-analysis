@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://bank-statements-api.onrender.com/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://bank-statements-api.onrender.com/health"
+    }
+  ]
+}
