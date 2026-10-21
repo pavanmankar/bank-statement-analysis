@@ -1,0 +1,44 @@
+{
+  "rowCount": 513,
+  "latestDate": "2025-09-28",
+  "eatingOutLastMonth": 1000,
+  "groceryThisQuarter": 7050,
+  "groceryLastQuarter": 7050,
+  "topMerchants": [
+    [
+      "Electricity",
+      50932
+    ],
+    [
+      "Uber",
+      23040
+    ],
+    [
+      "Meesho",
+      19830
+    ],
+    [
+      "DMart",
+      18000
+    ],
+    [
+      "Flipkart",
+      7200
+    ]
+  ],
+  "topMonth": "2025-07",
+  "topMonthTotal": 17806,
+  "topMonthMerchant": "Electricity",
+  "above5000Last30": 2,
+  "julyFood": 1000,
+  "earned": 750,
+  "growwCount": 4,
+  "growwExpense": 0,
+  "refundInExpenses": 0,
+  "lastQuarterStart": "2025-04-01",
+  "lastQuarterEnd": "2025-06-30",
+  "thisQuarterStart": "2025-07-01",
+  "thisQuarterEnd": "2025-09-30",
+  "fyBoundaryQ4": "FY 2024-25 Q4",
+  "fyBoundaryQ1": "FY 2025-26 Q1"
+}

@@ -1,0 +1,37 @@
+{
+  "name": "bank-statements-api",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "start:dev": "tsx watch src/main.ts",
+    "seed": "tsx src/seed/load.ts",
+    "generate-seed": "tsx src/seed/generate.ts",
+    "test": "tsx --test src/ingest/parse.test.ts src/sql/guard.test.ts src/ingest/balance-chain.test.ts src/ingest/bank.test.ts src/chat/gate.test.ts src/chat/fiscal.test.ts src/chat/chart-spec.test.ts src/chat/mask.test.ts src/chat/prompt.test.ts src/chat/verify.test.ts src/chat/verify-answer.test.ts src/chat/month-answer.test.ts src/chat/known-answer.test.ts src/chat/intent.test.ts src/chat/direct-reply.test.ts src/chat/fixed-tools.test.ts src/chat/tool-loop.test.ts src/measures.test.ts",
+    "eval": "tsx ../eval/run.ts",
+    "db:local": "tsx src/dev/start-db.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-express": "^10.4.15",
+    "pdf-parse": "^1.1.1",
+    "pg": "^8.13.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.10.5",
+    "@types/pdf-parse": "^1.1.4",
+    "@types/pg": "^8.11.10",
+    "embedded-postgres": "^18.4.0-beta.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "allowScripts": {
+    "@embedded-postgres/windows-x64@18.4.0-beta.17": true,
+    "esbuild@0.28.2": true
+  }
+}
